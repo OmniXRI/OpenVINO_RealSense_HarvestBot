@@ -9,5 +9,6 @@ im-show.vcxproj.user Visual Studio專案檔
 opencv-show.sln Visual Studio專案檔  
 rs-opencvshow.cpp 主程式  
 
+完整說明文章請參考 【3D感測器】如何擷取Intel RealSense™串流影像到OpenCV 
 
-
+http://omnixri.blogspot.com/2019/11/3dintel-realsenseopencv.html
