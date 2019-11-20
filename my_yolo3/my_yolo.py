@@ -20,13 +20,13 @@ from keras.utils import multi_gpu_model
 
 class YOLO(object):
     _defaults = {
-        "model_path": 'model_data/trained_weights_final.h5',
-        "anchors_path": 'model_data/yolo_anchors.txt',
-        "classes_path": 'model_data/my_classes.txt',
-        "score" : 0.1, #0.3
-        "iou" : 0.45,
-        "model_image_size" : (416, 416),
-        "gpu_num" : 1,
+        "model_path": 'model_data/trained_weights_final.h5', #指定YOLO訓練完成權重檔路徑及名稱
+        "anchors_path": 'model_data/yolo_anchors.txt', #指定錨點定義檔路徑及名稱
+        "classes_path": 'model_data/my_classes.txt', #指定自定義標籤檔路徑及名稱
+        "score" : 0.1, #最低置信度門檻(0.01~0.99)
+        "iou" : 0.45, #重疊區比例(0.01~1.0)
+        "model_image_size" : (416, 416), #影像尺寸
+        "gpu_num" : 1, #使用GPU數量
     }
 
     @classmethod
@@ -212,21 +212,21 @@ def detect_video(yolo, video_path, output_path=""):
 
 if __name__ == '__main__':
     t0 = timer()
-    yolo=YOLO()
-    path = 'C:/Users/jack_/my_yolo3/VOC2007/JPEGImages/img_1550.jpg'
+    yolo=YOLO() #進行YOLO初始化
+    path = 'C:/Users/jack_/my_yolo3/VOC2007/JPEGImages/img_1550.jpg' #指定待測影像檔案路徑及名稱
     try:
         t1 = timer()
-        image = Image.open(path)
+        image = Image.open(path) #開啟待推論影像
     except:
         print('Open Error! Try again!')
     else:       
         print('Start detect object.\n')
         t2 = timer()
-        r_image = yolo.detect_image(image)            
+        r_image = yolo.detect_image(image) #進行推論
         t3 = timer()            
-        r_image.show()
-        print('Yolo inital: %f sec' %(t1-t0))
-        print('Image load: %f sec' %(t2-t1))
-        print('Detect object: %f sec\n' %(t3-t2))
+        r_image.show() #顯示有標示物件框的結果影像
+        print('Yolo inital: %f sec' %(t1-t0)) #計算及顯示YOLO初始化時間
+        print('Image load: %f sec' %(t2-t1)) #計算及顯示影像載入時間
+        print('Detect object: %f sec\n' %(t3-t2)) #計算偵測物件時間
 
-    yolo.close_session()
+    yolo.close_session() #結束YOLO工作

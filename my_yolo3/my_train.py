@@ -13,15 +13,15 @@ from yolo3.utils import get_random_data
 
 
 def _main():
-    annotation_path = '2007_train.txt'
-    log_dir = 'logs/000/'
-    classes_path = 'model_data/my_classes.txt'
-    anchors_path = 'model_data/yolo_anchors.txt'
+    annotation_path = '2007_train.txt' #待訓練清單(YOLO格式）
+    log_dir = 'logs/000/' #訓練過程及結果暫存路徑
+    classes_path = 'model_data/my_classes.txt' #自定義標籤檔路徑及名稱
+    anchors_path = 'model_data/yolo_anchors.txt' #錨點定義檔路徑及名稱
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
 
-    input_shape = (416,416) # multiple of 32, hw
+    input_shape = (416,416) # multiple of 32, hw 預設輸入影像尺寸須為32的倍數(寬，高)
 
     is_tiny_version = len(anchors)==6 # default setting
     if is_tiny_version:
@@ -29,11 +29,11 @@ def _main():
             freeze_body=2, weights_path='model_data/tiny_yolo_weights.h5')
     else:
         model = create_model(input_shape, anchors, num_classes,
-            freeze_body=2, weights_path='model_data/trained_weights_final.h5') #yolo_weights.h5') # make sure you know what you freeze
-
+            freeze_body=2, weights_path='model_data/yolo_weights.h5') #指定起始訓練權重檔路徑及名稱
+        
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
-        monitor='val_loss', save_weights_only=True, save_best_only=True, period=3)
+        monitor='val_loss', save_weights_only=True, save_best_only=True, period=3) #訓練過程權重檔名稱由第幾輪加上損失率為名稱
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=3, verbose=1)
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
 
@@ -53,20 +53,20 @@ def _main():
             # use custom yolo_loss Lambda layer.
             'yolo_loss': lambda y_true, y_pred: y_pred})
 
-        batch_size = 24
+        batch_size = 24 #批次處理數量，依GPU記憶體大小決定
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
         model.fit_generator(data_generator_wrapper(lines[:num_train], batch_size, input_shape, anchors, num_classes),
                 steps_per_epoch=max(1, num_train//batch_size),
                 validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
                 validation_steps=max(1, num_val//batch_size),
-                epochs=10, #50
-                initial_epoch=0, #0
+                epochs=50, #訓練遍歷次數
+                initial_epoch=0, #初始訓練遍歷次數
                 callbacks=[logging, checkpoint])
     
-        model.save_weights(log_dir + 'trained_weights_stage_1.h5')
+        model.save_weights(log_dir + 'trained_weights_stage_1.h5') #儲存臨時權重檔案名稱
 
-    # Unfreeze and continue training, to fine-tune.
-    # Train longer if the result is not good.
+    # 解凍並繼續訓練以進行微調
+    # 如果效果不好則訓練更長時間
     if True:
         for i in range(len(model.layers)):
             model.layers[i].trainable = True
@@ -79,12 +79,12 @@ def _main():
             steps_per_epoch=max(1, num_train//batch_size),
             validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
             validation_steps=max(1, num_val//batch_size),
-            epochs=10, #100
-            initial_epoch=10, #50
+            epochs=100, #訓練遍歷次數
+            initial_epoch=50, #初始訓練遍歷次數
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
         
-        model.save_weights(log_dir + 'trained_weights_final.h5')
-        model.save(log_dir + 'trained_model_final.h5')
+        model.save_weights(log_dir + 'trained_weights_final.h5') #儲存最終權重檔
+        #model.save(log_dir + 'trained_model_final.h5') #儲存完整模型及權重檔
 
     # Further training if needed.
 

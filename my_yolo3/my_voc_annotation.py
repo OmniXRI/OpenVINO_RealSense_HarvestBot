@@ -1,12 +1,12 @@
 import xml.etree.ElementTree as ET
 from os import getcwd
 
-sets=['train', 'val', 'test']
+sets=['train', 'val', 'test'] #定義資料集名稱
 
-classes = ["tomato"]
+classes = ["tomato"] #定義自訂義類別名稱
 
 def convert_annotation(img_id, list_file):
-    in_file = open('VOC2007\Annotations\%s.xml' %img_id, encoding='utf-8')
+    in_file = open('VOC2007\Annotations\%s.xml' %img_id, encoding='utf-8') #指定標註檔路徑
     tree=ET.parse(in_file)
     root = tree.getroot()
 
@@ -21,8 +21,8 @@ def convert_annotation(img_id, list_file):
         list_file.write(" " + ",".join([str(a) for a in b]) + ',' + str(cls_id))
 
 for image_set in sets:
-    img_names = open('VOC2007\ImageSets\Main\%s.txt'%image_set).read().strip().split()     
-    list_file = open('2007_%s.txt'%image_set, 'w')
+    img_names = open('VOC2007\ImageSets\Main\%s.txt'%image_set).read().strip().split() #指定待轉換清單檔案名稱
+    list_file = open('2007_%s.txt'%image_set, 'w') #指定轉換完成清單名稱
     for img_name in img_names:
         list_file.write('VOC2007\JPEGImages\%s.jpg'%img_name)
         img_id = img_name.split('.')
